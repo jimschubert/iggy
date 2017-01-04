@@ -150,6 +150,8 @@ public abstract class Rule {
      * Example: **\/*.bak excludes all backup. Adding !/test.bak will include test.bak in the project root.
      * <p>
      * NOTE: It is not possible to re-include a file if a parent directory of that file is excluded.
+     *
+     * @return true if the pattern is negated, false if normal.
      */
     public Boolean getNegated() {
         return this.syntax != null && this.syntax.size() > 0 && this.syntax.get(0).getToken() == IgnoreLineParser.Token.NEGATE;

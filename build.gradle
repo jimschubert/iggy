@@ -1,6 +1,7 @@
-group 'us.jimschubert'
-version '1.0-SNAPSHOT'
+group = "$group"
+version = "${version}"
 
+apply plugin: 'idea'
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'signing'
@@ -8,28 +9,22 @@ apply plugin: 'signing'
 repositories {
     jcenter()
     mavenCentral()
+    maven {
+        url "https://oss.sonatype.org/content/repositories/public"
+    }
 }
 
 configurations.all {
     resolutionStrategy.failOnVersionConflict()
 }
 
-allprojects {
-    group = "$group"
-    apply plugin: 'idea'
-    repositories {
-        jcenter()
-        mavenCentral()
-        maven {
-            url "https://oss.sonatype.org/content/repositories/public"
-        }
-    }
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
 }
 
-tasks.withType(JavaCompile) { options.encoding = 'UTF-8' }
-
 compileJava {
-    sourceCompatibility = 1.7
+    sourceCompatibility = 1.8
     targetCompatibility = 1.8
 }
 
@@ -40,13 +35,74 @@ dependencies {
     testCompile 'org.apache.commons:commons-lang3:3.5'
 }
 
+task sourcesJar(type: Jar) {
+    from project.sourceSets.main.allSource
+    classifier "sources"
+}
+
+task javadocJar(type: Jar) {
+    classifier 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+            pom.project {
+                name 'iggy'
+                packaging 'jar'
+                description 'Iggy, the ignore file processor.'
+                url 'https://gitlab.com/jimschubert/iggy'
+                scm {
+                    connection 'git@gitlab.com:jimschubert/iggy.git'
+                    developerConnection 'scm:git:git@gitlab.com:jimschubert/iggy.git'
+                    url 'https://gitlab.com/jimschubert/iggy'
+                }
+                licenses {
+                    license {
+                        name 'Apache'
+                        url 'https://gitlab.com/jimschubert/iggy/blob/master/LICENSE'
+                    }
+                }
+                developers {
+                    developer {
+                        id 'jimschubert'
+                        name 'Jim Schubert'
+                        email 'james.schubert@gmail.com'
+                    }
+                }
+            }
+        }
+    }
+}
+
 test {
     useTestNG()
-    testLogging.showStandardStreams = true
+
+    testLogging {
+        // showStandardStreams = true
+        exceptionFormat "short"
+        events "PASSED", "FAILED", "SKIPPED"
+        debug {
+            events "STARTED", "FAILED", "SKIPPED"
+            exceptionFormat "full"
+        }
+    }
 }
 
 task wrapper(type: Wrapper) {
     gradleVersion = '3.2'
 }
-
-version = "${version}"
