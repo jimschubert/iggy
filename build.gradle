@@ -1,0 +1,52 @@
+group 'us.jimschubert'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+configurations.all {
+    resolutionStrategy.failOnVersionConflict()
+}
+
+allprojects {
+    group = "$group"
+    apply plugin: 'idea'
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven {
+            url "https://oss.sonatype.org/content/repositories/public"
+        }
+    }
+}
+
+tasks.withType(JavaCompile) { options.encoding = 'UTF-8' }
+
+compileJava {
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.8
+}
+
+dependencies {
+    compile 'org.slf4j:slf4j-api:1.7.20'
+    compile 'ch.qos.logback:logback-classic:1.1.7'
+    testCompile 'org.testng:testng:6.8.1'
+    testCompile 'org.apache.commons:commons-lang3:3.5'
+}
+
+test {
+    useTestNG()
+    testLogging.showStandardStreams = true
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.2'
+}
+
+version = "${version}"
