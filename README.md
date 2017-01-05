@@ -2,6 +2,8 @@
 
 Iggy is an ignore file processor for java. It was originally a part of swagger-codegen.
 
+[![Maven Central](https://img.shields.io/maven-central/v/us.jimschubert/iggy.svg?label=maven:%20iggy)](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22iggy%22)  
+
 ## Patterns
 
 File patterns follow closely to that of `.gitignore`. All ignore patterns allow glob patterns supported by [java.nio.file.PathMatcher](https://docs.oracle.com/javase/tutorial/essential/io/find.html),
@@ -23,7 +25,7 @@ Similar to `.gitignore` processing, a double asterisk (`**`) can be used in plac
 
 For example:
 
-```git exclude
+```
 path\to\**\file
 ```
 
@@ -33,7 +35,7 @@ Single asterisks (`*`) match any characters within a pattern.
 
 For example:
 
-```git exclude
+```
 path\to\*file
 ```
 
