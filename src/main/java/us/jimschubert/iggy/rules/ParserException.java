@@ -17,6 +17,10 @@
 
 package us.jimschubert.iggy.rules;
 
+/**
+ * An exception which may occur for any issues during parsing of the ignore file.
+ */
+@SuppressWarnings("WeakerAccess")
 public class ParserException extends Exception {
     /**
      * Constructs a new exception with the specified detail message.  The

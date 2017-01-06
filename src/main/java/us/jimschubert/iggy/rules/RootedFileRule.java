@@ -28,6 +28,12 @@ public class RootedFileRule extends Rule {
     private String definedFilename = null;
     private String definedExtension = null;
 
+    /**
+     * Constructs a new instance of a {@link RootedFileRule}.
+     *
+     * @param syntax     The syntax as parsed from the original definition.
+     * @param definition The original definition.
+     */
     RootedFileRule(List<Part> syntax, String definition) {
         super(syntax, definition);
 
@@ -44,6 +50,12 @@ public class RootedFileRule extends Rule {
         return input.substring(stopIndex > 0 ? stopIndex + 1 : input.length(), input.length());
     }
 
+    /**
+     * The constraints for inclusion or exclusion defined by the {@link RootedFileRule}.
+     *
+     * @param relativePath The path relative to the ignore file to evaluate against the rules included in that ignore file.
+     * @return {@code true} if the rule matches for exclusion, otherwise {@code false}.
+     */
     @Override
     public Boolean matches(String relativePath) {
         // NOTE: Windows-style separator isn't supported, so File.pathSeparator would be incorrect here.

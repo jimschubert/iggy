@@ -30,39 +30,72 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Presents a processing utility for parsing and evaluating files containing common ignore patterns. (.ignore)
+ */
 public class IgnoreProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IgnoreProcessor.class);
-    private final String outputPath;
 
     private List<Rule> exclusionRules = new ArrayList<>();
     private List<Rule> inclusionRules = new ArrayList<>();
 
-    public IgnoreProcessor(String outputPath) {
-        this(".ignore", outputPath);
+    private File ignoreFile = null;
+
+    /**
+     * Loads the default ignore file (.ignore) from the specified path.
+     *
+     * @param baseDirectory The base directory of the files to be processed. This contains the ignore file.
+     */
+    @SuppressWarnings("WeakerAccess")
+    public IgnoreProcessor(final String baseDirectory) {
+        this(baseDirectory, ".ignore");
     }
 
-    public IgnoreProcessor(String ignoreFile, String outputPath) {
-        this.outputPath = outputPath;
-        final File directory = new File(outputPath);
+
+    /**
+     * Loads the specified ignore file by name ([ignoreFile]) from the specified path.
+     *
+     * @param baseDirectory The base directory of the files to be processed. This contains the ignore file.
+     * @param ignoreFile    The file containing ignore patterns.
+     */
+    @SuppressWarnings("WeakerAccess")
+    public IgnoreProcessor(String baseDirectory, String ignoreFile) {
+        final File directory = new File(baseDirectory);
+        final File targetIgnoreFile = new File(directory, ignoreFile);
         if (directory.exists() && directory.isDirectory()) {
-            final File codegenIgnore = new File(directory, ignoreFile);
-            if (codegenIgnore.exists() && codegenIgnore.isFile()) {
-                try {
-                    loadCodegenRules(codegenIgnore);
-                } catch (IOException e) {
-                    LOGGER.error(String.format("Could not process %s.", ignoreFile), e.getMessage());
-                }
-            } else {
-                // log info message
-                LOGGER.info(String.format("No %s file found.", ignoreFile));
-            }
+            loadFromFile(targetIgnoreFile);
+        } else {
+            LOGGER.warn("Directory does not exist, or is inaccessible. No file will be evaluated.");
         }
     }
 
+    /**
+     * Constructs an instance of {@link IgnoreProcessor} from an ignore file defined by {@code targetIgnoreFile}.
+     *
+     * @param targetIgnoreFile The ignore file location.
+     */
+    @SuppressWarnings("WeakerAccess")
+    public IgnoreProcessor(File targetIgnoreFile) {
+        loadFromFile(targetIgnoreFile);
+    }
 
-    void loadCodegenRules(File codegenIgnore) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader(codegenIgnore))) {
+    private void loadFromFile(File targetIgnoreFile) {
+        if (targetIgnoreFile.exists() && targetIgnoreFile.isFile()) {
+            try {
+                loadAndProcessRules(targetIgnoreFile);
+                this.ignoreFile = targetIgnoreFile;
+            } catch (IOException e) {
+                LOGGER.error(String.format("Could not process %s.", targetIgnoreFile.getName()), e.getMessage());
+            }
+        } else {
+            // log info message
+            LOGGER.info(String.format("No %s file found.", targetIgnoreFile.getName()));
+        }
+    }
+
+    private void loadAndProcessRules(final File ignoreFile) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new FileReader(ignoreFile))) {
             String line;
 
             // NOTE: Comments that start with a : (e.g. //:) are pulled from git documentation for .gitignore
@@ -87,8 +120,19 @@ public class IgnoreProcessor {
         }
     }
 
-    public boolean allowsFile(File targetFile) {
-        File file = new File(new File(this.outputPath).toURI().relativize(targetFile.toURI()).getPath());
+    /**
+     * Determines whether or not a file defined by {@code toEvaluate} is allowed,
+     * under the exclusion rules from the ignore file being processed.
+     *
+     * @param toEvaluate The file to check against exclusion rules from the ignore file.
+     * @return {@code false} if file matches any pattern in the ignore file (disallowed), otherwise {@code true} (allowed).
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean allowsFile(final File toEvaluate) {
+        if (ignoreFile == null) return false;
+
+        File file = new File(this.ignoreFile.getParentFile().toURI().relativize(toEvaluate.toURI()).getPath());
+
         Boolean directoryExcluded = false;
         Boolean exclude = false;
         if (exclusionRules.size() == 0 && inclusionRules.size() == 0) {
@@ -150,10 +194,22 @@ public class IgnoreProcessor {
         return Boolean.FALSE.equals(exclude);
     }
 
+    /**
+     * Allows a consumer to manually inspect explicit "inclusion rules". That is, patterns in the ignore file which have been negated.
+     *
+     * @return A {@link Collections#unmodifiableList(List)} of rules which possibly negate exclusion rules in the ignore file.
+     */
     public List<Rule> getInclusionRules() {
         return Collections.unmodifiableList(inclusionRules);
     }
 
+    /**
+     * Allows a consumer to manually inspect all "exclusion rules". That is, patterns in the ignore file which represent
+     * files and directories to be excluded, unless explicitly overridden by {@link IgnoreProcessor#getInclusionRules()} rules.
+     *
+     * @return A {@link Collections#unmodifiableList(List)} of rules which define exclusions by patterns in the ignore file.
+     * @apiNote Existence in this list doesn't mean a file is excluded. The rule can be overridden by {@link IgnoreProcessor#getInclusionRules()} rules.
+     */
     public List<Rule> getExclusionRules() {
         return Collections.unmodifiableList(exclusionRules);
     }

@@ -19,21 +19,37 @@ package us.jimschubert.iggy.rules;
 
 import java.util.List;
 
+/**
+ * A base abstraction on an "ignore rule" which defines the exclusions or inclusions of files or directories,
+ * generally using glob patterns.
+ */
 public abstract class Rule {
 
     // The original rule
     private final String definition;
     private final List<Part> syntax;
 
+    /**
+     * Constructs a new instance of {@link Rule}, providing a parsed syntax of the rule definition, and the original definition.
+     *
+     * @param syntax     The syntax as parsed by the definition.
+     * @param definition The originally defined rule. Generally a single line from an ignore file.
+     */
     Rule(List<Part> syntax, String definition) {
         this.syntax = syntax;
         this.definition = definition;
     }
 
+    /**
+     * A factory method for creating more specific instances of {@link Rule}, based on the ignore rule {@code definition}.
+     *
+     * @param definition The originally defined rule. Generally a single line from an ignore file.
+     * @return A new instance of a type deriving from {@link Rule}.
+     */
     public static Rule create(String definition) {
         // NOTE: Comments that start with a : (e.g. //:) are pulled from git documentation for .gitignore
         // see: https://github.com/git/git/blob/90f7b16b3adc78d4bbabbd426fb69aa78c714f71/Documentation/gitignore.txt
-        Rule rule = null;
+        Rule rule;
         if (definition.equals(".")) {
             return new InvalidRule(null, definition, "Pattern '.' is invalid.");
         } else if (definition.equals("!.")) {
@@ -45,9 +61,9 @@ public abstract class Rule {
         try {
             List<Part> result = IgnoreLineParser.parse(definition);
 
-            Boolean directoryOnly = null;
+            Boolean directoryOnly;
             if (result.size() == 0) {
-                return rule;
+                return null;
             } else if (result.size() == 1) {
                 // single-character filename only
                 Part part = result.get(0);
@@ -132,12 +148,31 @@ public abstract class Rule {
         return rule;
     }
 
+    /**
+     * The constraints for inclusion or exclusion defined by the {@link Rule}.
+     *
+     * @param relativePath The path relative to the ignore file to evaluate against the rules included in that ignore file.
+     * @return {@code true} if the rule matches for exclusion, otherwise {@code false}.
+     */
     public abstract Boolean matches(String relativePath);
 
+    /**
+     * Gets the original definition of this rule.
+     *
+     * @return a String representing the line processed from the ignore file.
+     */
+    @SuppressWarnings("unused")
     public String getDefinition() {
         return this.definition;
     }
 
+    /**
+     * Gets the pattern used to evaluate a rule. This method includes some cleanup based on certain tokens that may occur in a rule's definition.
+     *
+     * @return A string for the relevant pattern defined by the rule's {@link Rule#definition}.
+     * @apiNote This method is not expected to return exactly the same content as {@link Rule#definition}.
+     */
+    @SuppressWarnings("WeakerAccess")
     protected String getPattern() {
         if (syntax == null) return this.definition;
 
@@ -174,6 +209,12 @@ public abstract class Rule {
         return this.syntax != null && this.syntax.size() > 0 && this.syntax.get(0).getToken() == IgnoreLineParser.Token.NEGATE;
     }
 
+    /**
+     * Evaluates a path against a derived {@link Rule}'s match constraints, resulting in the defined {@link Operation} for that rule.
+     *
+     * @param relativePath The path relative to the ignore file to evaluate against the rules included in that ignore file.
+     * @return The {@link Operation} for an inclusion or exclusion rule.
+     */
     public Operation evaluate(String relativePath) {
         if (Boolean.TRUE.equals(matches(relativePath))) {
             if (Boolean.TRUE.equals(this.getNegated())) {
@@ -184,13 +225,30 @@ public abstract class Rule {
         return Operation.NOOP;
     }
 
+    /**
+     * Defines the {@link Operation} to perform when a {@link Rule} is marked for inclusion of a file.
+     *
+     * @return The {@link Operation} when a rule includes a file or directory.
+     */
+    @SuppressWarnings("WeakerAccess")
     protected Operation getIncludeOperation() {
         return Operation.INCLUDE;
     }
 
+    /**
+     * Defines the {@link Operation} to perform when a {@link Rule} is marked for exclusion of a file.
+     *
+     * @return The {@link Operation} when a rule excludes a file or directory.
+     */
+    @SuppressWarnings("WeakerAccess")
     protected Operation getExcludeOperation() {
         return Operation.EXCLUDE;
     }
 
-    public enum Operation {EXCLUDE, INCLUDE, NOOP, EXCLUDE_AND_TERMINATE}
+    /**
+     * Defines the action to be taken when a rule evaluates to either an include or exclude operation.
+     */
+    public enum Operation {
+        EXCLUDE, INCLUDE, NOOP, EXCLUDE_AND_TERMINATE
+    }
 }

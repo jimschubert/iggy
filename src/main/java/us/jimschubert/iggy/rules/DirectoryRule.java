@@ -21,11 +21,22 @@ import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
 import java.util.List;
 
+/**
+ * Defines processing of directories
+ * <p>
+ * Supports all file patterns (see {@link FileRule}), and evaluates against rules ending in either {@code /} or {@code /**}.
+ */
 public class DirectoryRule extends FileRule {
 
     private PathMatcher directoryMatcher = null;
     private PathMatcher contentsMatcher = null;
 
+    /**
+     * Constructs a new instance of a {@link DirectoryRule}.
+     *
+     * @param syntax     The syntax as parsed from the original definition.
+     * @param definition The original definition.
+     */
     DirectoryRule(List<Part> syntax, String definition) {
         super(syntax, definition);
         String pattern = this.getPattern();
@@ -38,6 +49,12 @@ public class DirectoryRule extends FileRule {
         contentsMatcher = FileSystems.getDefault().getPathMatcher(sb.toString());
     }
 
+    /**
+     * The constraints for inclusion or exclusion defined by the {@link DirectoryRule}.
+     *
+     * @param relativePath The path relative to the ignore file to evaluate against the rules included in that ignore file.
+     * @return {@code true} if the rule matches for exclusion, otherwise {@code false}.
+     */
     @Override
     public Boolean matches(String relativePath) {
         return contentsMatcher.matches(FileSystems.getDefault().getPath(relativePath)) || directoryMatcher.matches(FileSystems.getDefault().getPath(relativePath));

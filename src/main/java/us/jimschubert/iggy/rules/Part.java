@@ -17,24 +17,49 @@
 
 package us.jimschubert.iggy.rules;
 
+/**
+ * Provides the tokenized representation of a part of a rule's definition.
+ */
 class Part {
     private final IgnoreLineParser.Token token;
     private final String value;
 
+    /**
+     * Constructs a new instance of {@see Part}, provided the token and whatever value it represents.
+     *
+     * @param token The token of the parsed part of the rule.
+     * @param value The value of the rule part.
+     */
     public Part(IgnoreLineParser.Token token, String value) {
         this.token = token;
         this.value = value;
     }
 
+    /**
+     * Constructs a new instance of {@see Part}, provided the token.
+     *
+     * @param token The token of the parsed part of the rule.
+     */
     public Part(IgnoreLineParser.Token token) {
         this.token = token;
         this.value = token.getPattern();
     }
 
+
+    /**
+     * Gets the underlying token of this part
+     *
+     * @return the token
+     */
     public IgnoreLineParser.Token getToken() {
         return token;
     }
 
+    /**
+     * Gets the underlying value of this part
+     *
+     * @return the string representing the {@link Part#getToken()}
+     */
     public String getValue() {
         return value;
     }
