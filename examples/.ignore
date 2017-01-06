@@ -1,0 +1,16 @@
+# This is an example ignore file
+
+# This matches only a.txt under level1 directory (relative to .ignore)
+level1/a.txt
+
+# This recursively matches: c.text
+**/c.txt
+
+# This recursively matches files ending in: file
+**/*file
+
+# This matches only against the directory in which .ignore exists, negating from the recursive *file pattern above
+!/rootedfile
+
+# This allows any file recursivly named b with a three-character extension
+!**/b.???

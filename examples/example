@@ -1,0 +1,22 @@
+#!/bin/sh
+exec kotlins -cp `mvncp us.jimschubert:iggy:1.0.0` "$0" "$@"
+!#
+// To run, see https://github.com/andrewoma/kotlin-script
+// NOTE: This file will have apparent syntax issues in your IDE.
+import us.jimschubert.iggy.IgnoreProcessor
+import java.io.File
+
+fun main(args: Array<String>) {
+    val processor = IgnoreProcessor(".")
+    val currentDirectory = File(".")
+
+    fun walk(current: File) {
+        current.listFiles().forEach { file ->
+            if(file.isDirectory()) walk(file)
+            else System.out.println("$file is allowed: ${processor.allowsFile(file)}")
+        }
+    }
+
+    walk(currentDirectory)
+}
+
