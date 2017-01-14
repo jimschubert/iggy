@@ -2,6 +2,8 @@
 
 Iggy is an ignore file processor for java. It was originally a part of swagger-codegen.
 
+[![build status](https://gitlab.com/jimschubert/iggy/badges/master/build.svg)](https://gitlab.com/jimschubert/iggy/commits/master)
+
 [![Maven Central](https://img.shields.io/maven-central/v/us.jimschubert/iggy.svg?label=maven:%20iggy)](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22iggy%22)  
 
 ## Usage
