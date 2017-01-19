@@ -129,7 +129,7 @@ public class IgnoreProcessor {
      */
     @SuppressWarnings("WeakerAccess")
     public boolean allowsFile(final File toEvaluate) {
-        if (ignoreFile == null) return false;
+        if (ignoreFile == null) return true;
 
         File file = new File(this.ignoreFile.getParentFile().toURI().relativize(toEvaluate.toURI()).getPath());
 
